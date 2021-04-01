@@ -1,0 +1,280 @@
+<html>
+
+<head>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/networkgraph.js"></script>
+  <script src="./metrobuda.min.js"></script>
+
+  <style>
+    #container {
+      min-width: 100%;
+      height: 87vh;
+      margin: 0 auto;
+    }
+
+    #controls {
+      min-width: 100%;
+      height: 10vh;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="controls">
+    <!-- <div>
+      <label for="start"> Inicio </label>
+      <input type="text" id="start" />
+    </div>
+    <div>
+      <label for="end"> Fin </label>
+      <input type="text" id="end" />
+    </div> -->
+    <div>
+      <label for="redFileSelect"> Seleccione red </label>
+      <select id="redFileSelect">
+        <option value="./data/tarea-network-bidireccional.json">Buda Network</option>
+        <option value="./data/treinta.json">Red con 30 nodos</option>
+      </select>
+    </div>
+    <div>
+      <label for="colorSelect"> Seleccione color del tren </label>
+      <select id="colorSelect"></select>
+    </div>
+  </div>
+  <div id="container"></div>
+
+  <script>
+    var jsonDATA;
+    var graph;
+    var stationNetwork;
+    var shortPath = [];
+    var shortPathText = '';
+    var seriesdata = [];
+    var name = "";
+
+    var setStart = true;
+    var start = null;
+    var end = null;
+    var colorSelected = '';
+    var redFileSelect = './data/tarea-network-bidireccional.json';
+
+    var startInput = document.getElementById("start");
+    var endInput = document.getElementById("end");
+
+    var colorsArray = [];
+
+    function toggleInicio() {
+      setStart = !setStart;
+    }
+
+    function loadJson() {
+
+      fetch(redFileSelect)
+      // fetch("./data/tarea-network-bidireccional.json")
+      // fetch("./data/tarea-network-unidireccional.json")
+      // fetch("./data/treinta.json")
+        // fetch("./data/email-Eu-core.json")
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          jsonDATA = data;
+          name = data.name;
+
+          loadMetroBuda(data);
+
+          preRender(data);
+
+          console.log("seriesdata :>> ", seriesdata);
+
+          renderChart();
+        })
+        .catch(function (err) {
+          console.log(err);
+        });
+
+    }
+    
+    function loadMetroBuda(json) {
+      stationNetwork = MetroBuda.loadNetwork(json);
+
+      colorsArray = [];
+      stationNetwork.stationList.forEach((s) => {
+        if (s.color) {
+          colorsArray.push(s.color);
+        }
+      })
+
+      colorsArray = [... new Set(colorsArray)]
+      document.getElementById('colorSelect').innerHTML = '<option value="">Sin color</option>'
+      const opciones = colorsArray.forEach(color => {
+        const opt = document.createElement('option');
+        opt.value = color;
+        opt.innerText = color;
+        document.getElementById('colorSelect').append(opt);
+      })
+
+
+    }
+
+    function preRender(data) {
+      seriesdata = [];
+      data.stations.forEach((s) => {
+        if (Array.isArray(s.to)) {
+          s.to.forEach((to) => {
+            let width =
+              (shortPath.indexOf(s.id) > -1 && (shortPath.indexOf(s.id) + 1) == shortPath.indexOf(to)) ? 7 : 1;
+            let color = width === 7 ? (colorSelected || "gray") : "gray";
+
+
+            // console.log(s.id, to, shortPath.indexOf(s.id), shortPath.indexOf(to), width);
+
+            seriesdata.push({ from: s.id, to: to, c: s.color, width, color });
+          });
+        }
+      });
+
+
+    }
+
+
+    function onClickNode(node) {
+      if (setStart) {
+        start = node;
+        end = null;
+        shortPath = [];
+        shortPathText = '';
+      } else {
+        end = node;
+      }
+      toggleInicio();
+
+      if (start && end) {
+        showShortPath()
+      }
+    }
+
+    function showShortPath() {
+      const res = stationNetwork.getShortestPath(start, end, colorSelected)
+      // console.log('res.realPath :>> ', res.realPath);
+      shortPathText = [start, ...res.shortPath].join(' -> ');
+      shortPath = [start, ...res.realPath];
+      // console.log("shortPath :>> ", shortPath);
+      // console.log("shortPath :>> ", shortPathText);
+
+      console.log({ colorSelected, shortPathText });
+
+      preRender(jsonDATA);
+      renderChart();
+    }
+
+    function getTitle() {
+
+      if (start && end) {
+        if (shortPath.length < 2) {
+          return `No existe una ruta entre ${start} y ${end}`;
+        } else {
+          return `Ruta mas corta entre ${start} y ${end} tren color ${colorSelected || 'invisible'} es: ${shortPathText}`
+        }
+
+      } else {
+
+        return 'Seleccione dos puntos en el mapa';
+      }
+
+      let title = ''
+    }
+
+    function renderChart() {
+      graph = Highcharts.chart("container", {
+        chart: {
+          type: "networkgraph",
+          plotBorderWidth: 1,
+        },
+        title: {
+          text: getTitle()
+        },
+        subtitle: {
+          text: name
+        },
+        // plotOptions: {
+        //   networkgraph: {
+        //     keys: ["from", "to"],
+        //   },
+        // },
+        plotOptions: {
+          networkgraph: {
+            // keys: ['from', 'to'],
+            layoutAlgorithm: {
+              // enableSimulation: true,
+              integration: 'euler', //'verlet'
+              // linkLength: 100
+            }
+          }
+        },
+        series: [
+          {
+            marker: {
+              radius: 10,
+            },
+            dataLabels: {
+              enabled: true,
+              linkFormat: "",
+              style: {
+                fontSize: 20,
+              },
+            },
+            link: {
+              width: 3,
+            },
+            point: {
+              events: {
+                click: function () {
+                  onClickNode(this.id);
+                },
+              },
+            },
+            data: seriesdata,
+          },
+        ],
+      });
+    }
+
+    Highcharts.addEvent(Highcharts.Series, "afterSetOptions", function (e) {
+      var colors = Highcharts.getOptions().colors,
+        i = 0,
+        nodes = {};
+
+      if (this instanceof Highcharts.seriesTypes.networkgraph) {
+        e.options.data.forEach(function (link) {
+          nodes[link.from] = {
+            id: link.from,
+            color: link.c || "gray",
+          };
+        });
+
+        e.options.nodes = Object.keys(nodes).map(function (id) {
+          return nodes[id];
+        });
+      }
+    });
+
+    document.getElementById('colorSelect').onchange = function (e) {
+      colorSelected = e.target.value;
+      showShortPath();
+    }
+
+    document.getElementById('redFileSelect').onchange = function (e) {
+      redFileSelect = e.target.value;
+      colorSelected = '';
+      graph.destroy();
+      loadJson()
+    }
+
+    loadJson()
+
+  </script>
+</body>
+
+</html>

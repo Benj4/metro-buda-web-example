@@ -1,0 +1,62 @@
+{
+  "name": "Buda.com - Metro bidireccional",
+  "stations": [
+    {
+      "id": "A",
+      "name": "A",
+      "color": null,
+      "to": ["B"]
+    },
+    {
+      "id": "B",
+      "name": "B",
+      "color": null,
+      "to": ["C","A"]
+    },
+    {
+      "id": "C",
+      "name": "C",
+      "color": null,
+      "to": ["D", "G", "B"]
+    },
+
+    {
+      "id": "D",
+      "name": "D",
+      "color": null,
+      "to": ["E","C"]
+    },
+    {
+      "id": "E",
+      "name": "E",
+      "color": null,
+      "to": ["F","D"]
+    },
+    {
+      "id": "F",
+      "name": "F",
+      "color": null,
+      "to": ["E","I"]
+    },
+    {
+      "id": "G",
+      "name": "G",
+      "color": "green",
+      "to": ["H","C"]
+    },
+    {
+      "id": "H",
+      "name": "H",
+      "color": "red",
+      "to": ["I","G"]
+    },
+    {
+      "id": "I",
+      "name": "I",
+      "color": "green",
+      "to": ["F","H"]
+    }
+
+  ]
+}
+

@@ -1,0 +1,61 @@
+{
+  "name": "Buda.com - Metro unidireccional",
+  "stations": [
+    {
+      "id": "A",
+      "name": "A",
+      "color": null,
+      "to": ["B"]
+    },
+    {
+      "id": "B",
+      "name": "B",
+      "color": null,
+      "to": ["C"]
+    },
+    {
+      "id": "C",
+      "name": "C",
+      "color": null,
+      "to": ["D", "G"]
+    },
+
+    {
+      "id": "D",
+      "name": "D",
+      "color": null,
+      "to": ["E"]
+    },
+    {
+      "id": "E",
+      "name": "E",
+      "color": null,
+      "to": ["F"]
+    },
+    {
+      "id": "F",
+      "name": "F",
+      "color": null,
+      "to": []
+    },
+    {
+      "id": "G",
+      "name": "G",
+      "color": "green",
+      "to": ["H"]
+    },
+    {
+      "id": "H",
+      "name": "H",
+      "color": "red",
+      "to": ["I"]
+    },
+    {
+      "id": "I",
+      "name": "I",
+      "color": "green",
+      "to": ["F"]
+    }
+
+  ]
+}
